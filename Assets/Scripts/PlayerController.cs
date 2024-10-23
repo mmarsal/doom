@@ -8,13 +8,13 @@ public class PlayerController : MonoBehaviour
     public bool canMove = true;
     public bool isSprinting = false;
 
-    [Header("Move Parameter")]
+    [Header("Move Parameters")]
     public float walkSpeed = 6f;
     public float sprintSpeed = 12f;
     public float jumpPower = 7f;
     public float gravity = 9.81f;
 
-    [Header("Camera Parameter")]
+    [Header("Camera Parameters")]
     public Camera fpsCamera;
     public float lookSpeed = 2f;
     public float lookLimit = 45f;
@@ -25,7 +25,14 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 lookInput;
     private float rotation;
-    private bool firstJump = false;
+
+    [Header("Double Jump Parameters")]
+    public LayerMask groundLayer;      // LayerMask to specify what counts as "ground"
+    public Transform groundCheck;      // Transform below the player's feet (to cast the ray from)
+    private float groundCheckDistance = 0.3f;  // Distance the ray will check for the ground
+    private readonly int maxJumps = 2;           // Maximum number of jumps (including double jump)
+    private int jumpsLeft;             // Tracks remaining jumps
+    private bool isGrounded;           // Whether the player is currently grounded
 
     // Start is called before the first frame update
     void Start()
@@ -33,6 +40,8 @@ public class PlayerController : MonoBehaviour
         characterController = GetComponent<CharacterController>();
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        jumpsLeft = maxJumps;
     }
 
     // Update is called once per frame
@@ -50,7 +59,7 @@ public class PlayerController : MonoBehaviour
 
         // Jumping
         moveVelocity.y = movementVelocity;
-        if(!characterController.isGrounded)
+        if (!characterController.isGrounded)
         {
             moveVelocity.y -= gravity * Time.deltaTime;
         }
@@ -66,6 +75,8 @@ public class PlayerController : MonoBehaviour
             fpsCamera.transform.localRotation = Quaternion.Euler(rotation, 0, 0);
             transform.rotation *= Quaternion.Euler(0, lookInput.x * lookSpeed, 0);
         }
+
+        CheckGrounded();
     }
 
     public void HandleMoveInput(InputAction.CallbackContext ctx)
@@ -78,7 +89,8 @@ public class PlayerController : MonoBehaviour
         if (ctx.performed)
         {
             isSprinting = true;
-        } else if (ctx.canceled)
+        }
+        else if (ctx.canceled)
         {
             isSprinting = false;
         }
@@ -86,21 +98,32 @@ public class PlayerController : MonoBehaviour
 
     public void HandleJumpInput(InputAction.CallbackContext ctx)
     {
-        Debug.Log(firstJump);
-        if(firstJump)
-        {
-            firstJump = false;
-            return;
-        }
-        if(ctx.performed && canMove)
+        if (ctx.performed && canMove && jumpsLeft > 1)
         {
             moveVelocity.y = jumpPower;
-            firstJump = true;
+            if (!isGrounded)
+            {
+                jumpsLeft--;
+            }
         }
     }
 
     public void HandleLookInput(InputAction.CallbackContext ctx)
     {
         lookInput = ctx.ReadValue<Vector2>();
+    }
+
+    void CheckGrounded()
+    {
+        // Cast a ray from the player's feet downwards to check for ground
+        if (Physics.Raycast(groundCheck.position, Vector3.down, out RaycastHit hit, groundCheckDistance, groundLayer))
+        {
+            isGrounded = true;          // If the ray hits the ground, the player is grounded
+            jumpsLeft = maxJumps;       // Reset jumps when grounded
+        }
+        else
+        {
+            isGrounded = false;         // If no hit, the player is in the air
+        }
     }
 }
