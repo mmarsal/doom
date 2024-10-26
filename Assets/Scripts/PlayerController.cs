@@ -11,8 +11,14 @@ public class PlayerController : MonoBehaviour
     [Header("Move Parameters")]
     public float walkSpeed = 6f;
     public float sprintSpeed = 12f;
-    public float jumpPower = 7f;
-    public float gravity = 9.81f;
+    public float jumpPower = 11f;
+    public float gravity = 16f;
+
+    [Header("Dash Parameters")]
+    public float dashSpeed = 20f;           // Speed during the dash
+    public float dashDuration = 0.2f;       // Duration of each dash
+    public float dashCooldown = 1f;         // Cooldown before both dashes reset
+    public int maxDashes = 2;               // Maximum dashes before cooldown
 
     [Header("Camera Parameters")]
     public Camera fpsCamera;
@@ -27,12 +33,18 @@ public class PlayerController : MonoBehaviour
     private float rotation;
 
     [Header("Double Jump Parameters")]
-    public LayerMask groundLayer;      // LayerMask to specify what counts as "ground"
-    public Transform groundCheck;      // Transform below the player's feet (to cast the ray from)
-    private float groundCheckDistance = 0.3f;  // Distance the ray will check for the ground
-    private readonly int maxJumps = 2;           // Maximum number of jumps (including double jump)
-    private int jumpsLeft;             // Tracks remaining jumps
-    private bool isGrounded;           // Whether the player is currently grounded
+    public LayerMask groundLayer;           // LayerMask to specify what counts as "ground"
+    public Transform groundCheck;           // Transform below the player's feet (to cast the ray from)
+    private readonly float groundCheckDistance = 0.3f;  // Distance the ray will check for the ground
+    private readonly int maxJumps = 2;       // Maximum number of jumps (including double jump)
+    private int jumpsLeft;                   // Tracks remaining jumps
+    private bool isGrounded;                 // Whether the player is currently grounded
+
+    private bool isDashing = false;          // Is the player currently dashing
+    private float dashTime;                  // Timer for the dash duration
+    private Vector3 dashDirection;           // Direction of the dash
+    private int dashesLeft;                  // Dashes remaining before cooldown
+    private float dashCooldownTimer;         // Timer for dash cooldown
 
     // Start is called before the first frame update
     void Start()
@@ -42,6 +54,8 @@ public class PlayerController : MonoBehaviour
         Cursor.visible = false;
 
         jumpsLeft = maxJumps;
+        dashesLeft = maxDashes; // Initialize dashes left
+        dashCooldownTimer = 0f;  // Initialize dash cooldown timer
     }
 
     // Update is called once per frame
@@ -64,7 +78,20 @@ public class PlayerController : MonoBehaviour
             moveVelocity.y -= gravity * Time.deltaTime;
         }
 
-        characterController.Move(moveVelocity * Time.deltaTime);
+        // Handle dashing
+        if (isDashing)
+        {
+            dashTime += Time.deltaTime;
+            characterController.Move(dashSpeed * Time.deltaTime * dashDirection); // Apply dash movement
+            if (dashTime >= dashDuration)
+            {
+                isDashing = false; // End the dash
+            }
+        }
+        else
+        {
+            characterController.Move(moveVelocity * Time.deltaTime); // Regular movement
+        }
 
         // Camera
         if (canMove)
@@ -77,6 +104,16 @@ public class PlayerController : MonoBehaviour
         }
 
         CheckGrounded();
+
+        // Update the dash cooldown timer and reset dashes if needed
+        if (dashCooldownTimer > 0)
+        {
+            dashCooldownTimer -= Time.deltaTime;
+            if (dashCooldownTimer <= 0)
+            {
+                dashesLeft = maxDashes; // Reset dashes when cooldown ends
+            }
+        }
     }
 
     public void HandleMoveInput(InputAction.CallbackContext ctx)
@@ -111,6 +148,28 @@ public class PlayerController : MonoBehaviour
     public void HandleLookInput(InputAction.CallbackContext ctx)
     {
         lookInput = ctx.ReadValue<Vector2>();
+    }
+
+    public void HandleDashInput(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed && !isDashing && dashesLeft > 0)
+        {
+            Dash();
+        }
+    }
+
+    private void Dash()
+    {
+        // Set the dash direction based on current movement input
+        dashDirection = (transform.forward).normalized; // Dash forward in the direction the player is facing
+        isDashing = true;
+        dashTime = 0f; // Reset the dash timer
+
+        dashesLeft--; // Reduce the dash count
+        if (dashesLeft <= 0)
+        {
+            dashCooldownTimer = dashCooldown; // Start the cooldown if no dashes are left
+        }
     }
 
     void CheckGrounded()
