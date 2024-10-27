@@ -46,6 +46,10 @@ public class PlayerController : MonoBehaviour
     private int dashesLeft;                  // Dashes remaining before cooldown
     private float dashCooldownTimer;         // Timer for dash cooldown
 
+    public LayerMask trampolineLayer;
+    private bool onTrampoline = false;
+    public float trampolineVelocity = 15f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -72,7 +76,7 @@ public class PlayerController : MonoBehaviour
         moveVelocity = (forward * currentSpeedX) + (right * currentSpeedY);
 
         // Jumping
-        moveVelocity.y = movementVelocity;
+        moveVelocity.y = onTrampoline ? trampolineVelocity : movementVelocity;
         if (!characterController.isGrounded)
         {
             moveVelocity.y -= gravity * Time.deltaTime;
@@ -104,6 +108,8 @@ public class PlayerController : MonoBehaviour
         }
 
         CheckGrounded();
+
+        CheckTrampoline();
 
         // Update the dash cooldown timer and reset dashes if needed
         if (dashCooldownTimer > 0)
@@ -169,6 +175,18 @@ public class PlayerController : MonoBehaviour
         if (dashesLeft <= 0)
         {
             dashCooldownTimer = dashCooldown; // Start the cooldown if no dashes are left
+        }
+    }
+
+    void CheckTrampoline()
+    {
+        if (Physics.Raycast(groundCheck.position, Vector3.down, out RaycastHit hit, groundCheckDistance, trampolineLayer))
+        {
+            onTrampoline = true;
+        }
+        else
+        {
+            onTrampoline = false;
         }
     }
 
