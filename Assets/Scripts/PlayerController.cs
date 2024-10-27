@@ -39,6 +39,7 @@ public class PlayerController : MonoBehaviour
     private readonly int maxJumps = 2;       // Maximum number of jumps (including double jump)
     private int jumpsLeft;                   // Tracks remaining jumps
     private bool isGrounded;                 // Whether the player is currently grounded
+    private bool wasGrounded = false;       // Track the previous grounded state
 
     private bool isDashing = false;          // Is the player currently dashing
     private float dashTime;                  // Timer for the dash duration
@@ -109,6 +110,14 @@ public class PlayerController : MonoBehaviour
 
         CheckGrounded();
 
+        // Reset jumps only when the player has landed
+        if (isGrounded && !wasGrounded)
+        {
+            jumpsLeft = maxJumps; // Reset jumps when grounded after being airborne
+        }
+
+        wasGrounded = isGrounded; // Update the previous grounded state
+
         CheckTrampoline();
 
         // Update the dash cooldown timer and reset dashes if needed
@@ -141,13 +150,10 @@ public class PlayerController : MonoBehaviour
 
     public void HandleJumpInput(InputAction.CallbackContext ctx)
     {
-        if (ctx.performed && canMove && jumpsLeft > 1)
+        if (ctx.performed && canMove && jumpsLeft > 0)
         {
             moveVelocity.y = jumpPower;
-            if (!isGrounded)
-            {
-                jumpsLeft--;
-            }
+            jumpsLeft--;
         }
     }
 
@@ -183,6 +189,7 @@ public class PlayerController : MonoBehaviour
         if (Physics.Raycast(groundCheck.position, Vector3.down, out RaycastHit hit, groundCheckDistance, trampolineLayer))
         {
             onTrampoline = true;
+            jumpsLeft = maxJumps;
         }
         else
         {
@@ -192,15 +199,13 @@ public class PlayerController : MonoBehaviour
 
     void CheckGrounded()
     {
-        // Cast a ray from the player's feet downwards to check for ground
         if (Physics.Raycast(groundCheck.position, Vector3.down, out RaycastHit hit, groundCheckDistance, groundLayer))
         {
-            isGrounded = true;          // If the ray hits the ground, the player is grounded
-            jumpsLeft = maxJumps;       // Reset jumps when grounded
+            isGrounded = true;
         }
         else
         {
-            isGrounded = false;         // If no hit, the player is in the air
+            isGrounded = false;
         }
     }
 }
