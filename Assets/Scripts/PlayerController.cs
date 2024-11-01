@@ -59,8 +59,6 @@ public class PlayerController : MonoBehaviour
 
     [Header("Climbing")]
     public float climbSpeed;
-    public float maxClimbTime;
-    private float climbTimer;
 
     private bool climbing;
 
@@ -104,8 +102,9 @@ public class PlayerController : MonoBehaviour
         moveVelocity.y = onTrampoline ? trampolineVelocity : movementVelocity;
 
         if (climbing) moveVelocity.y = climbSpeed;
+        if (climbing && moveInput == Vector2.zero) moveVelocity.y = 0;
 
-        if (!characterController.isGrounded)
+        if (!characterController.isGrounded && !climbing)
         {
             moveVelocity.y -= gravity * Time.deltaTime;
         }
@@ -243,12 +242,9 @@ public class PlayerController : MonoBehaviour
 
     private void StateMachine()
     {
-        if (wallFront && Input.GetKey(KeyCode.W) && wallLookAngle < maxWallLookAngle)
+        if (wallFront && wallLookAngle < maxWallLookAngle)
         {
-            if (!climbing && climbTimer > 0) StartClimbing();
-
-            if (climbTimer > 0) climbTimer -= Time.deltaTime;
-            if (climbTimer < 0) StopClimbing();
+            StartClimbing();
         }
         else
         {
@@ -260,13 +256,6 @@ public class PlayerController : MonoBehaviour
     {
         wallFront = Physics.SphereCast(transform.position, sphereCastRadius, orientation.forward, out frontWallHit, detectionLength, whatIsWall);
         wallLookAngle = Vector3.Angle(orientation.forward, -frontWallHit.normal);
-
-        // climbNormal = frontWallHit.normal;
-
-        if (isGrounded)
-        {
-            climbTimer = maxClimbTime;
-        }
     }
 
     private void StartClimbing()
@@ -277,10 +266,6 @@ public class PlayerController : MonoBehaviour
     private void ClimbingMovement()
     {
         rb.velocity = new Vector3(rb.velocity.x, climbSpeed, rb.velocity.z);
-        // Vector3 climbMovement = new Vector3(moveInput.x, moveInput.y, 0) * climbSpeed;
-        // Vector3 wallMovement = Vector3.ProjectOnPlane(climbMovement, climbNormal);
-
-        // characterController.Move(wallMovement * Time.deltaTime);
     }
 
     private void StopClimbing()
