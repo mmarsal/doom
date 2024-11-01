@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -51,6 +52,29 @@ public class PlayerController : MonoBehaviour
     private bool onTrampoline = false;
     public float trampolineVelocity = 15f;
 
+    [Header("References")]
+    public Transform orientation;
+    public Rigidbody rb;
+    public LayerMask whatIsWall;
+
+    [Header("Climbing")]
+    public float climbSpeed;
+    public float maxClimbTime;
+    private float climbTimer;
+
+    private bool climbing;
+
+    [Header("Climbing")]
+    public float detectionLength;
+    public float sphereCastRadius;
+    public float maxWallLookAngle;
+    private float wallLookAngle;
+
+    private RaycastHit frontWallHit;
+    private bool wallFront;
+
+    private Vector3 climbNormal; // The normal of the wall the player is climbing
+
     // Start is called before the first frame update
     void Start()
     {
@@ -78,6 +102,9 @@ public class PlayerController : MonoBehaviour
 
         // Jumping
         moveVelocity.y = onTrampoline ? trampolineVelocity : movementVelocity;
+
+        if (climbing) moveVelocity.y = climbSpeed;
+
         if (!characterController.isGrounded)
         {
             moveVelocity.y -= gravity * Time.deltaTime;
@@ -129,6 +156,11 @@ public class PlayerController : MonoBehaviour
                 dashesLeft = maxDashes; // Reset dashes when cooldown ends
             }
         }
+
+        WallCheck();
+        StateMachine();
+
+        if (climbing) ClimbingMovement();
     }
 
     public void HandleMoveInput(InputAction.CallbackContext ctx)
@@ -207,5 +239,52 @@ public class PlayerController : MonoBehaviour
         {
             isGrounded = false;
         }
+    }
+
+    private void StateMachine()
+    {
+        if (wallFront && Input.GetKey(KeyCode.W) && wallLookAngle < maxWallLookAngle)
+        {
+            if (!climbing && climbTimer > 0) StartClimbing();
+
+            if (climbTimer > 0) climbTimer -= Time.deltaTime;
+            if (climbTimer < 0) StopClimbing();
+        }
+        else
+        {
+            if (climbing) StopClimbing();
+        }
+    }
+
+    public void WallCheck()
+    {
+        wallFront = Physics.SphereCast(transform.position, sphereCastRadius, orientation.forward, out frontWallHit, detectionLength, whatIsWall);
+        wallLookAngle = Vector3.Angle(orientation.forward, -frontWallHit.normal);
+
+        // climbNormal = frontWallHit.normal;
+
+        if (isGrounded)
+        {
+            climbTimer = maxClimbTime;
+        }
+    }
+
+    private void StartClimbing()
+    {
+        climbing = true;
+    }
+
+    private void ClimbingMovement()
+    {
+        rb.velocity = new Vector3(rb.velocity.x, climbSpeed, rb.velocity.z);
+        // Vector3 climbMovement = new Vector3(moveInput.x, moveInput.y, 0) * climbSpeed;
+        // Vector3 wallMovement = Vector3.ProjectOnPlane(climbMovement, climbNormal);
+
+        // characterController.Move(wallMovement * Time.deltaTime);
+    }
+
+    private void StopClimbing()
+    {
+        climbing = false;
     }
 }
