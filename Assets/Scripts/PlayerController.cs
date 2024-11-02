@@ -103,6 +103,22 @@ public class PlayerController : MonoBehaviour
 
         if (climbing) moveVelocity.y = climbSpeed;
         if (climbing && moveInput == Vector2.zero) moveVelocity.y = 0;
+        if (climbing && Input.GetKey(KeyCode.S))
+        {
+            moveVelocity.y = -climbSpeed;
+            moveVelocity.z = 0;
+            moveVelocity.x = 0;
+        }
+        if (climbing && (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D)))
+        {
+            moveVelocity.y = 0;
+        }
+        if (climbing && Input.GetKey(KeyCode.Space))
+        {
+            Vector3 forceToApply = transform.up * jumpPower + frontWallHit.normal * jumpPower;
+            moveVelocity = new Vector3(rb.velocity.x, 0f, rb.velocity.z);
+            rb.AddForce(forceToApply, ForceMode.Impulse);
+        }
 
         if (!characterController.isGrounded && !climbing)
         {
