@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -77,10 +78,13 @@ public class PlayerController : MonoBehaviour
     private Vector3 velocityToSet;
     private bool enableMovementOnNextTouch;
 
-    public GameObject grapplingHook;
+    public GameObject machineGun;
     public GameObject obstacleGun;
+    public GameObject grapplingHook;
 
     private float health = 120;
+
+    public TextMeshProUGUI healthText;
 
     // Start is called before the first frame update
     void Start()
@@ -92,6 +96,8 @@ public class PlayerController : MonoBehaviour
         jumpsLeft = maxJumps;
         dashesLeft = maxDashes; // Initialize dashes left
         dashCooldownTimer = 0f;  // Initialize dash cooldown timer
+
+        healthText.SetText("HP: " + health);
     }
 
     // Update is called once per frame
@@ -238,8 +244,9 @@ public class PlayerController : MonoBehaviour
     {
         if (ctx.performed)
         {
-            grapplingHook.SetActive(true);
+            machineGun.SetActive(true);
             obstacleGun.SetActive(false);
+            grapplingHook.SetActive(false);
         }
     }
 
@@ -248,7 +255,18 @@ public class PlayerController : MonoBehaviour
         if (ctx.performed)
         {
             obstacleGun.SetActive(true);
+            machineGun.SetActive(false);
             grapplingHook.SetActive(false);
+        }
+    }
+
+    public void HandleWeaponSwitchThreeInput(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            grapplingHook.SetActive(true);
+            machineGun.SetActive(false);
+            obstacleGun.SetActive(false);
         }
     }
 
@@ -362,6 +380,7 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
+        healthText.SetText("HP: " + health);
 
         if (health <= 0) Invoke(nameof(GameOver), 2f);
     }
@@ -369,5 +388,6 @@ public class PlayerController : MonoBehaviour
     private void GameOver()
     {
         // TODO
+        Debug.Log("GAME OVER");
     }
 }
