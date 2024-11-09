@@ -53,7 +53,6 @@ public class EnemyAi : MonoBehaviour
 
     private void Patroling()
     {
-        Debug.Log("PATROLING");
         if (!walkPointSet) SearchWalkPoint();
 
         if (walkPointSet)
@@ -100,7 +99,6 @@ public class EnemyAi : MonoBehaviour
         {
             // Attack code here
             Rigidbody rb = Instantiate(projectile, positionInFront, Quaternion.identity).GetComponent<Rigidbody>();
-            Debug.Log(transform.position);
 
             rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
             rb.AddForce(transform.up * 8f, ForceMode.Impulse);

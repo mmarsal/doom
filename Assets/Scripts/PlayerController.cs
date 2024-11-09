@@ -77,6 +77,9 @@ public class PlayerController : MonoBehaviour
     private Vector3 velocityToSet;
     private bool enableMovementOnNextTouch;
 
+    public GameObject grapplingHook;
+    public GameObject obstacleGun;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -226,6 +229,24 @@ public class PlayerController : MonoBehaviour
         if (ctx.performed && !isDashing && dashesLeft > 0)
         {
             Dash();
+        }
+    }
+
+    public void HandleWeaponSwitchOneInput(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            grapplingHook.SetActive(true);
+            obstacleGun.SetActive(false);
+        }
+    }
+
+    public void HandleWeaponSwitchTwoInput(InputAction.CallbackContext ctx)
+    {
+        if (ctx.performed)
+        {
+            obstacleGun.SetActive(true);
+            grapplingHook.SetActive(false);
         }
     }
 
