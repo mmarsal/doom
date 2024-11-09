@@ -80,6 +80,8 @@ public class PlayerController : MonoBehaviour
     public GameObject grapplingHook;
     public GameObject obstacleGun;
 
+    private float health = 120;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -355,5 +357,17 @@ public class PlayerController : MonoBehaviour
     public void ResetRestrictions()
     {
         activeGrapple = false;
+    }
+
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
+
+        if (health <= 0) Invoke(nameof(GameOver), 2f);
+    }
+
+    private void GameOver()
+    {
+        // TODO
     }
 }

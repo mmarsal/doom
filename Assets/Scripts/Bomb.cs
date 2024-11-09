@@ -33,6 +33,21 @@ public class Bomb : MonoBehaviour
                 Vector3 direction = obj.transform.position - transform.position;
                 rb.AddForce(direction.normalized * explosionForce, ForceMode.Impulse);
             }
+
+            // Try to get the enemyScript component on each object in range
+            EnemyAi enemyScript = obj.GetComponent<EnemyAi>();
+
+            // Check if the enemyScript was found
+            if (enemyScript != null)
+            {
+                // Access or modify the health variable
+                enemyScript.TakeDamage(60);
+            }
+            else
+            {
+                PlayerController playerScript = obj.GetComponent<PlayerController>();
+                playerScript.TakeDamage(60);
+            }
         }
     }
 

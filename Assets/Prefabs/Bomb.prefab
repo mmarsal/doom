@@ -124,7 +124,7 @@ MonoBehaviour:
   explosionForce: 100
   explosionLayerMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 768
 --- !u!54 &5168555312542095156
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -149,6 +149,6 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
