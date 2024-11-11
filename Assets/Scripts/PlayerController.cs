@@ -85,6 +85,7 @@ public class PlayerController : MonoBehaviour
     private float health = 120;
 
     public TextMeshProUGUI healthText;
+    public TextMeshProUGUI ammoText;
 
     // Start is called before the first frame update
     void Start()
@@ -247,6 +248,7 @@ public class PlayerController : MonoBehaviour
             machineGun.SetActive(true);
             obstacleGun.SetActive(false);
             grapplingHook.SetActive(false);
+            ammoText.enabled = true;
         }
     }
 
@@ -257,6 +259,7 @@ public class PlayerController : MonoBehaviour
             obstacleGun.SetActive(true);
             machineGun.SetActive(false);
             grapplingHook.SetActive(false);
+            ammoText.enabled = false;
         }
     }
 
@@ -267,6 +270,7 @@ public class PlayerController : MonoBehaviour
             grapplingHook.SetActive(true);
             machineGun.SetActive(false);
             obstacleGun.SetActive(false);
+            ammoText.enabled = false;
         }
     }
 
@@ -388,6 +392,5 @@ public class PlayerController : MonoBehaviour
     private void GameOver()
     {
         // TODO
-        Debug.Log("GAME OVER");
     }
 }
