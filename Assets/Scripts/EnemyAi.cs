@@ -29,8 +29,12 @@ public class EnemyAi : MonoBehaviour
     public float attackRange;
     public bool playerInSightRange;
     public bool playerInAttackRange;
+    private bool dead;
 
     Animator animator;
+
+    [Range(0, 1)]
+    public float lookThreshold = 0.95f;  // 1 means perfectly aligned, closer to 0 allows wider angles
 
     private void Awake()
     {
@@ -55,17 +59,18 @@ public class EnemyAi : MonoBehaviour
         playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
 
         // Handle states based on player proximity
-        if (!playerInSightRange && !playerInAttackRange && !isWaiting)
+        if (!playerInSightRange && !playerInAttackRange && !isWaiting && !dead)
             Patroling();
-        if (playerInSightRange && !playerInAttackRange)
+        if (playerInSightRange && !playerInAttackRange && !dead)
             ChasePlayer();
-        if (playerInAttackRange && playerInSightRange)
+        if (playerInAttackRange && playerInSightRange && !dead && IsLookingDirectlyAtTarget())
             AttackPlayer();
     }
 
     private void Patroling()
     {
         animator.SetBool("walking", true);  // Set to walking animation
+        animator.SetBool("throwing", false);
 
         if (!walkPointSet)
             SearchWalkPoint();
@@ -130,6 +135,7 @@ public class EnemyAi : MonoBehaviour
     private void ChasePlayer()
     {
         animator.SetBool("walking", true); // Set to walking animation
+        animator.SetBool("throwing", false);
         agent.SetDestination(player.position);
     }
 
@@ -142,7 +148,7 @@ public class EnemyAi : MonoBehaviour
         transform.LookAt(player);
 
         // Distance in front of the bot where to instantiate the object
-        float distanceInFront = 3.0f;
+        float distanceInFront = 2.0f;
 
         // Calculate the position in front of the bot
         Vector3 positionInFront = transform.position + transform.forward * distanceInFront + transform.up * distanceInFront;
@@ -157,6 +163,7 @@ public class EnemyAi : MonoBehaviour
 
             alreadyAttacked = true;
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
+            animator.SetBool("throwing", true);
         }
     }
 
@@ -168,8 +175,14 @@ public class EnemyAi : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
+        animator.SetTrigger("gettingHit");
 
-        if (health <= 0) Invoke(nameof(DestroyEnemy), 2f);
+        if (health <= 0)
+        {
+            dead = true;
+            animator.SetTrigger("dying");
+            Invoke(nameof(DestroyEnemy), 5f);
+        }
     }
 
     private void DestroyEnemy()
@@ -183,5 +196,20 @@ public class EnemyAi : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, sightRange);
+    }
+
+    bool IsLookingDirectlyAtTarget()
+    {
+        // Calculate direction from the player to the target
+        Vector3 directionToTarget = (player.position - transform.position).normalized;
+
+        // Get the forward direction of the player (where they're looking)
+        Vector3 playerForward = transform.forward;
+
+        // Calculate the dot product between the player's forward direction and the direction to the target
+        float dotProduct = Vector3.Dot(playerForward, directionToTarget);
+
+        // Check if the dot product is greater than the threshold
+        return dotProduct >= lookThreshold;
     }
 }
