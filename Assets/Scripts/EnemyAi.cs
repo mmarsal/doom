@@ -59,18 +59,25 @@ public class EnemyAi : MonoBehaviour
         playerInAttackRange = Physics.CheckSphere(transform.position, attackRange, whatIsPlayer);
 
         // Handle states based on player proximity
-        if (!playerInSightRange && !playerInAttackRange && !isWaiting && !dead)
-            Patroling();
-        if (playerInSightRange && !playerInAttackRange && !dead)
-            ChasePlayer();
-        if (playerInAttackRange && playerInSightRange && !dead && IsLookingDirectlyAtTarget())
+        if (playerInAttackRange && playerInSightRange && !alreadyAttacked && !dead)
+        {
             AttackPlayer();
+        }
+        else if (!playerInSightRange && !playerInAttackRange && !isWaiting)
+        {
+            Patroling();
+        }
+        else if (playerInSightRange && !playerInAttackRange)
+        {
+            ChasePlayer();
+        }
     }
 
     private void Patroling()
     {
         animator.SetBool("walking", true);  // Set to walking animation
         animator.SetBool("throwing", false);
+        animator.SetBool("shooting", false);
 
         if (!walkPointSet)
             SearchWalkPoint();
@@ -136,6 +143,7 @@ public class EnemyAi : MonoBehaviour
     {
         animator.SetBool("walking", true); // Set to walking animation
         animator.SetBool("throwing", false);
+        animator.SetBool("shooting", false);
         agent.SetDestination(player.position);
     }
 
@@ -147,24 +155,62 @@ public class EnemyAi : MonoBehaviour
 
         transform.LookAt(player);
 
+        if (!alreadyAttacked)
+        {
+            // Decide whether to shoot or throw a bomb
+            bool willShoot = Random.value > 0.5f; // 50% chance to shoot
+
+            if (willShoot)
+            {
+                ShootPlayer();
+            }
+            else
+            {
+                ThrowBomb();
+            }
+
+            alreadyAttacked = true;
+
+            // Reset attack cooldown
+            Invoke(nameof(ResetAttack), timeBetweenAttacks);
+        }
+    }
+
+    private void ShootPlayer()
+    {
+        // Trigger shooting animation
+        animator.SetBool("throwing", false);
+        animator.SetBool("shooting", true);
+
+        // Chance to deal damage
+        float damageChance = 0.5f; // 50% chance to hit
+        if (Random.value < damageChance)
+        {
+            PlayerController playerHealth = player.GetComponent<PlayerController>();
+            if (playerHealth != null)
+            {
+                playerHealth.TakeDamage(10); // Deal 10 damage
+            }
+        }
+    }
+
+    private void ThrowBomb()
+    {
         // Distance in front of the bot where to instantiate the object
         float distanceInFront = 2.0f;
 
         // Calculate the position in front of the bot
         Vector3 positionInFront = transform.position + transform.forward * distanceInFront + transform.up * distanceInFront;
 
-        if (!alreadyAttacked)
-        {
-            // Attack code here
-            Rigidbody rb = Instantiate(projectile, positionInFront, Quaternion.identity).GetComponent<Rigidbody>();
+        // Attack code for bomb-throwing
+        Rigidbody rb = Instantiate(projectile, positionInFront, Quaternion.identity).GetComponent<Rigidbody>();
 
-            rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
-            rb.AddForce(transform.up * 8f, ForceMode.Impulse);
+        rb.AddForce(transform.forward * 32f, ForceMode.Impulse);
+        rb.AddForce(transform.up * 8f, ForceMode.Impulse);
 
-            alreadyAttacked = true;
-            Invoke(nameof(ResetAttack), timeBetweenAttacks);
-            animator.SetBool("throwing", true);
-        }
+        // Trigger animation
+        animator.SetBool("throwing", true);
+        animator.SetBool("shooting", false);
     }
 
     private void ResetAttack()
