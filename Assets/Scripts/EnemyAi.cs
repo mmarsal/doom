@@ -245,7 +245,7 @@ public class EnemyAi : MonoBehaviour
         Destroy(gameObject);
 
         int childCount = parentObject.transform.childCount;
-        enemiesText.SetText("Enemies remaining: " + childCount);
+        enemiesText.SetText("Enemies remaining: " + (childCount - 1));
     }
 
     private void OnDrawGizmosSelected()
