@@ -82,7 +82,7 @@ public class PlayerController : MonoBehaviour
     public GameObject obstacleGun;
     public GameObject grapplingHook;
 
-    private float health = 120;
+    public float health = 120;
 
     public TextMeshProUGUI healthText;
     public TextMeshProUGUI ammoText;
@@ -384,13 +384,13 @@ public class PlayerController : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
-        healthText.SetText("HP: " + health);
-
-        if (health <= 0) Invoke(nameof(GameOver), 2f);
-    }
-
-    private void GameOver()
-    {
-        // TODO
+        if (health <= 0)
+        {
+            healthText.SetText("HP: 0");
+        }
+        else
+        {
+            healthText.SetText("HP: " + health);
+        }
     }
 }

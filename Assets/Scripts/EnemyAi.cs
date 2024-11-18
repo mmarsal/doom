@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -36,6 +37,9 @@ public class EnemyAi : MonoBehaviour
     [Range(0, 1)]
     public float lookThreshold = 0.95f;  // 1 means perfectly aligned, closer to 0 allows wider angles
 
+    public GameObject parentObject;
+    public TextMeshProUGUI enemiesText;
+
     private void Awake()
     {
         player = GameObject.Find("Character").transform;
@@ -49,6 +53,9 @@ public class EnemyAi : MonoBehaviour
     void Start()
     {
         animator.SetBool("walking", true); // Ensure walking animation on start
+
+        int childCount = parentObject.transform.childCount;
+        enemiesText.SetText("Enemies remaining: " + childCount);
     }
 
     // Update is called once per frame
@@ -220,6 +227,8 @@ public class EnemyAi : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
+        if (dead) return;
+
         health -= damage;
         animator.SetTrigger("gettingHit");
 
@@ -227,13 +236,16 @@ public class EnemyAi : MonoBehaviour
         {
             dead = true;
             animator.SetTrigger("dying");
-            Invoke(nameof(DestroyEnemy), 5f);
+            Invoke(nameof(DestroyEnemy), 3.5f);
         }
     }
 
     private void DestroyEnemy()
     {
         Destroy(gameObject);
+
+        int childCount = parentObject.transform.childCount;
+        enemiesText.SetText("Enemies remaining: " + childCount);
     }
 
     private void OnDrawGizmosSelected()
