@@ -1,3 +1,5 @@
+# doom
+
 Dieses Projekt ist eine Umsetzung des Spiels Doom. Um zu gewinnen,
 muss man alle fünf Bots, die auf der Karte verteilt patrouillieren,
 eliminieren. Wenn die Bots dem Spieler zu viel Schaden zufügen, hat man
